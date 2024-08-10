@@ -16,25 +16,31 @@ limitations under the License.
 
 package v1alpha1
 
+// TargetNameT defines TODO
+type TargetSelectorT struct {
+	MatchExact string `yaml:"matchExact,omitempty"`
+	MatchRegex string `yaml:"matchRegex,omitempty"`
+}
+
 // TargetT defines TODO
 type TargetT struct {
-	Group     string `json:"group"`
-	Version   string `json:"version"`
-	Kind      string `json:"kind"`
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
+	Group     string          `yaml:"group"`
+	Version   string          `yaml:"version"`
+	Resource  string          `yaml:"resource"`
+	Name      TargetSelectorT `yaml:"name"`
+	Namespace TargetSelectorT `yaml:"namespace"`
 }
 
 // ConditionT defines TODO
 type ConditionT struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+	Key   string `yaml:"key"`
+	Value string `yaml:"value"`
 }
 
 // ResourceT defines TODO
 type ResourceT struct {
-	Target     TargetT      `json:"target"`
-	Conditions []ConditionT `json:"conditions"`
+	Target     TargetT      `yaml:"target"`
+	Conditions []ConditionT `yaml:"conditions"`
 }
 
 // MetadataSpec TODO
@@ -44,7 +50,7 @@ type MetadataT struct {
 
 // SynchronizationT defines TODO
 type SynchronizationT struct {
-	Time string `json:"time"`
+	Time string `yaml:"time"`
 }
 
 // SpecificationSpec TODO

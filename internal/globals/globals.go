@@ -2,6 +2,7 @@ package globals
 
 import (
 	"context"
+	"hitman/api/v1alpha1"
 	"time"
 
 	"go.uber.org/zap"
@@ -16,8 +17,10 @@ var (
 
 // ExecutionContext TODO
 type ExecutionContext struct {
-	Context context.Context
-	Logger  zap.SugaredLogger
+	Context  context.Context
+	Logger   zap.SugaredLogger
+	LogLevel string
+	Config   v1alpha1.ConfigT
 }
 
 // SetLogger TODO

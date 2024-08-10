@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hitman/internal/config"
 	"hitman/internal/globals"
+	"hitman/internal/processor"
 	"log"
 	"time"
 
@@ -40,7 +41,6 @@ func NewCommand() *cobra.Command {
 	//
 	cmd.Flags().String("log-level", "info", "Verbosity level for logs")
 	cmd.Flags().Bool("disable-trace", true, "Disable showing traces in logs")
-	cmd.Flags().String("sync-time", "10m", "Waiting time between group synchronizations (in duration type)")
 	cmd.Flags().String("config", "hitman.yaml", "Path to the YAML config file")
 
 	return cmd
@@ -55,11 +55,12 @@ func RunCommand(cmd *cobra.Command, args []string) {
 		log.Fatalf(ConfigFlagErrorMessage, err)
 	}
 
-	// Init the logger
+	// Init the logger and store the level into the context
 	logLevelFlag, err := cmd.Flags().GetString("log-level")
 	if err != nil {
 		log.Fatalf(LogLevelFlagErrorMessage, err)
 	}
+	globals.ExecContext.LogLevel = logLevelFlag
 
 	disableTraceFlag, err := cmd.Flags().GetBool("disable-trace")
 	if err != nil {
@@ -71,37 +72,39 @@ func RunCommand(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	//
-	syncTime, err := cmd.Flags().GetString("sync-time")
-	if err != nil {
-		globals.ExecContext.Logger.Fatalf(SyncTimeFlagErrorMessage, err)
-	}
-
 	/////////////////////////////
 	// EXECUTION FLOW RELATED
 	/////////////////////////////
 
-	// Get and parse the config
+	globals.ExecContext.Logger.Infof("starting Hitman. Getting ready to kill some targets")
+
+	// Parse and store the config
 	configContent, err := config.ReadFile(configPath)
 	if err != nil {
 		globals.ExecContext.Logger.Fatalf(fmt.Sprintf(ConfigNotParsedErrorMessage, err))
 	}
-
-	_ = configContent // TODO
+	globals.ExecContext.Config = configContent
 
 	//
-	globals.ExecContext.Logger.Infof("Starting Hitman. Ready to kill some targets")
+	duration, err := time.ParseDuration(configContent.Spec.Synchronization.Time)
+	if err != nil {
+		globals.ExecContext.Logger.Fatalf(UnableParseDurationErrorMessage, err)
+	}
+
+	//
+	processorObj, err := processor.NewProcessor()
+	if err != nil {
+		globals.ExecContext.Logger.Infof("error creating processor: %s", err.Error())
+	}
 
 	for {
-
-		log.Print("Testing main flow")
-
-		//
-		duration, err := time.ParseDuration(syncTime)
+		globals.ExecContext.Logger.Info("syncing resources")
+		err = processorObj.SyncResources()
 		if err != nil {
-			globals.ExecContext.Logger.Fatalf(UnableParseDurationErrorMessage, err)
+			globals.ExecContext.Logger.Infof("error syncing resources: %s", err)
 		}
-		globals.ExecContext.Logger.Infof("Syncing again in %s", duration.String())
+
+		globals.ExecContext.Logger.Infof("syncing again in %s", duration.String())
 		time.Sleep(duration)
 	}
 }
