@@ -27,7 +27,7 @@ They are described in the following table:
 |:------------------|:-------------------------------|:-------------:|:-------------------------|
 | `--config`        | Path to the YAML config file   | `hitman.yaml` | `--config ./hitman.yaml` |
 | `--log-level`     | Verbosity level for logs       |    `info`     | `--log-level info`       |
-| `--disable-trace` | Disable showing traces in logs |    `info`     | `--disable-trace`        |
+| `--disable-trace` | Disable showing traces in logs |   `false`     | `--disable-trace`        |
 
 > Output is thrown always in JSON as it is more suitable for automations
 
