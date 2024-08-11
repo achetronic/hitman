@@ -1,0 +1,11 @@
+{{ if .Values.agent.config }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hitman.fullname" . }}-agent-config
+  labels:
+    {{- include "hitman.labels" . | nindent 4 }}
+data:
+  hitman.yaml: |-
+    {{- .Values.agent.config | nindent 4 }}
+{{- end }}

@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	descriptionShort = `TODO`
+	descriptionShort = `A daemon for Kubernetes to kill target resources under user-defined conditions`
 	descriptionLong  = `
-	A super TODO.
+	A daemon for Kubernetes to kill target resources under user-defined conditions.
+	Conditions are so powerful that they can be defined using Helm template.
 	`
 )
 

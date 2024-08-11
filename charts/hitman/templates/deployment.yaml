@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hitman.fullname" . }}
+  labels:
+    {{- include "hitman.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.agent.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "hitman.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.agent.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "hitman.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.agent.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "hitman.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.agent.podSecurityContext | nindent 8 }}
+      containers:
+        - name: agent
+          image: "{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag | default (printf "v%s" .Chart.AppVersion) }}"
+          imagePullPolicy: {{ .Values.agent.image.pullPolicy }}
+          command:
+            - /hitman
+            - run
+            - --config
+            - /etc/agent/hitman.yaml
+
+          {{- with .Values.agent.extraArgs }}
+          args:
+            {{ toYaml . | nindent 10 }}
+          {{- end }}
+
+          {{- with .Values.agent.env }}
+          env:
+            {{ toYaml . | nindent 10 }}
+          {{- end }}
+
+          {{- with .Values.agent.envFrom }}
+          envFrom:
+            {{ toYaml . | nindent 10 }}
+          {{- end }}
+
+          # TODO: Good first issue
+          {{- with .Values.agent.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with .Values.agent.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          resources:
+            {{- toYaml .Values.agent.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.agent.securityContext | nindent 12 }}
+
+          volumeMounts:
+            - name: agent-config
+              mountPath: /etc/agent/
+            {{- with .Values.agent.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+
+      {{- with .Values.agent.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.agent.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.agent.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      volumes:
+        - name: agent-config
+          configMap:
+            name: {{ include "hitman.fullname" . }}-agent-config
+        {{- with .Values.agent.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+
+
