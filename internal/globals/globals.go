@@ -17,10 +17,13 @@ var (
 
 // ExecutionContext TODO
 type ExecutionContext struct {
-	Context  context.Context
-	Logger   zap.SugaredLogger
+	Context context.Context
+	Logger  zap.SugaredLogger
+	Config  v1alpha1.ConfigT
+
+	//
 	LogLevel string
-	Config   v1alpha1.ConfigT
+	DryRun   bool
 }
 
 // SetLogger TODO

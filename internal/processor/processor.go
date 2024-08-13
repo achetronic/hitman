@@ -133,10 +133,8 @@ func (p *Processor) SyncResources() (err error) {
 // It computes templating, evaluates conditions and decides whether to delete it or not.
 func (p *Processor) processObject(gvr schema.GroupVersionResource, object unstructured.Unstructured, conditionList []v1alpha1.ConditionT) (result bool, err error) {
 
-	if globals.ExecContext.LogLevel == "debug" {
-		globals.ExecContext.Logger.Infof("processing object: group: '%s', version: '%s', resource: '%s', name: '%s', namespace: '%s'",
-			gvr.Group, gvr.Version, gvr.Resource, object.GetName(), object.GetNamespace())
-	}
+	globals.ExecContext.Logger.Debugf("processing object: group: '%s', version: '%s', resource: '%s', name: '%s', namespace: '%s'",
+		gvr.Group, gvr.Version, gvr.Resource, object.GetName(), object.GetNamespace())
 
 	// Create the object that will be injected on templating system
 	templateInjectedObject := map[string]interface{}{}
@@ -154,15 +152,19 @@ func (p *Processor) processObject(gvr schema.GroupVersionResource, object unstru
 
 		conditionFlags = append(conditionFlags, parsedKey == condition.Value)
 
-		if globals.ExecContext.LogLevel == "debug" {
-			globals.ExecContext.Logger.Infof("condition: key: '%s', value: '%s', equals: '%t'",
-				parsedKey, condition.Value, parsedKey == condition.Value)
-		}
+		globals.ExecContext.Logger.Debugf("condition: key: '%s', value: '%s', equals: '%t'",
+			parsedKey, condition.Value, parsedKey == condition.Value)
 	}
 
 	// Conditions not met. Skip
 	if slices.Contains(conditionFlags, false) {
-		return false, err
+		return false, nil
+	}
+
+	if globals.ExecContext.DryRun {
+		globals.ExecContext.Logger.Infof("dry-run enabled. Skipping deletion of object: '%s'/'%s'",
+			object.GetNamespace(), object.GetName())
+		return false, nil
 	}
 
 	// Finally, delete the object
@@ -172,5 +174,5 @@ func (p *Processor) processObject(gvr schema.GroupVersionResource, object unstru
 		return false, fmt.Errorf("error deleting object: %s", err)
 	}
 
-	return true, err
+	return true, nil
 }
