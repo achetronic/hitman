@@ -4,7 +4,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 # Following custom ClusterRole is a place where to add the type of resources
-# allowed to be treated by PG Selector.
+# allowed to be treated by Hitman.
 customClusterRole:
   # Specifies whether a custom clusterRole should be created
   create: true
@@ -45,7 +45,7 @@ agent:
     repository: ghcr.io/achetronic/hitman
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "v0.1.0"
+    tag: ""
 
   imagePullSecrets: []
 
