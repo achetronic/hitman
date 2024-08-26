@@ -168,6 +168,7 @@ func (p *Processor) processObject(gvr schema.GroupVersionResource, object unstru
 	}
 
 	// Define a grace period (in seconds) for the pod deletion
+	// Ref: https://github.com/kubernetes/apimachinery/blob/master/pkg/apis/meta/v1/types.go#L507
     gracePeriodSeconds := int64(0) // 0 for immediate deletion
 
 	// Finally, delete the object
