@@ -167,9 +167,14 @@ func (p *Processor) processObject(gvr schema.GroupVersionResource, object unstru
 		return false, nil
 	}
 
+	// Define a grace period (in seconds) for the pod deletion
+    gracePeriodSeconds := int64(0) // 0 for immediate deletion
+
 	// Finally, delete the object
 	err = p.Client.Resource(gvr).Namespace(object.GetNamespace()).
-		Delete(globals.ExecContext.Context, object.GetName(), v1.DeleteOptions{})
+		Delete(globals.ExecContext.Context, object.GetName(), v1.DeleteOptions{
+			GracePeriodSeconds: &gracePeriodSeconds,
+		})
 	if err != nil {
 		return false, fmt.Errorf("error deleting object: %s", err)
 	}
