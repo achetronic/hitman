@@ -81,8 +81,18 @@ check-go-target: ## Check presente of GOOS and GOARCH vars.
 		exit 1; \
 	fi
 
+check-version: ## Check presence of VERSION var.
+	@if [ -z "$(VERSION)" ]; then \
+		echo "VERSION is not defined. Define VERSION y try again."; \
+		exit 1; \
+	fi
+
+	@echo $(VERSION) | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$$' || \
+		(echo "VERSION must be in semver format" && exit 1)
+
 .PHONY: build
-build: fmt vet check-go-target ## Build CLI binary.
+build: fmt vet check-go-target check-version ## Build CLI binary.
+	@sed -i "s#{VERSION}#$(VERSION)#g" ./internal/cmd/version/version.go
 	go build -o bin/hitman-$(GOOS)-$(GOARCH) cmd/main.go
 
 .PHONY: run
