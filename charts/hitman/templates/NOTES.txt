@@ -1,14 +1,14 @@
 Congratulations! You have successfully deployed Hitman with a basic default configuration.
 
 IMPORTANT:
-- This deployment is using a basic default configuration (`hitman.yaml`) to prevent runtime errors during installation.
+- This deployment is using a basic default configuration (`hitman-agent-config`) to prevent runtime errors during installation.
 - It is highly recommended to customize the configuration to suit your needs.
 
 To update the configuration, follow these steps:
 
 1. Edit the existing ConfigMap:
 
-   kubectl edit configmap hitman.yaml -n {{ .Release.Namespace }}
+   kubectl edit configmap hitman-agent-config -n {{ .Release.Namespace }}
 
    Add your custom configuration values following the documentation.
 
