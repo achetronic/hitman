@@ -26,9 +26,17 @@ customClusterRole:
 agent:
 
   # Specify the configuration
-  config: |
+  config: | 
     # A complete example in the upstream repository
     # Ref: https://github.com/achetronic/hitman
+    version: v1alpha1
+    kind: Hitman
+    metadata:
+      name: cleanup-default
+    spec:
+      synchronization:
+        time: 10m  
+      resources: []  
 
   serviceAccount:
     # Specifies whether a service account should be created
