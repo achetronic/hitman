@@ -40,6 +40,7 @@ type ConditionT struct {
 // ResourceT defines TODO
 type ResourceT struct {
 	Target     TargetT      `yaml:"target"`
+	PreStep    string       `yaml:"preStep,omitempty"`
 	Conditions []ConditionT `yaml:"conditions"`
 }
 
