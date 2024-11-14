@@ -3,10 +3,10 @@ apiVersion: v2
 name: hitman
 type: application
 description: >-
-  A Helm chart for Hitman, a daemon for Kubernetes to kill 
+  A Helm chart for Hitman, a daemon for Kubernetes to kill
   target resources under user-defined templated conditions
-version: 0.2.2 # chart version
-appVersion: "0.2.1" # application version
+version: 0.3.0 # chart version
+appVersion: "0.3.0" # application version
 kubeVersion: ">=1.22.0-0" # kubernetes version
 home: https://github.com/achetronic/hitman
 sources:
