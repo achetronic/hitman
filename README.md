@@ -10,12 +10,12 @@ A daemon for Kubernetes to kill target resources under user-defined templated co
 
 ## Motivation
 
-In today's fast-paced environments, Kubernetes clusters often manage systems that dynamically create and destroy resources automatically. Examples of these are pipelines and cronjobs. 
+In today's fast-paced environments, Kubernetes clusters often manage systems that dynamically create and destroy resources automatically. Examples of these are pipelines and cronjobs.
 
-However, these automated processes can sometimes get stuck, causing disruptions that affect the smooth operation of the entire system. Often, simply terminating some of these objects can restore normalcy. 
+However, these automated processes can sometimes get stuck, causing disruptions that affect the smooth operation of the entire system. Often, simply terminating some of these objects can restore normalcy.
 
-There is a need for a solution that empowers Kubernetes administrators to automate this cleanup process efficiently. 
-This project exists to provide a robust agent for automating the deletion of potential stuck resources, 
+There is a need for a solution that empowers Kubernetes administrators to automate this cleanup process efficiently.
+This project exists to provide a robust agent for automating the deletion of potential stuck resources,
 ensuring your Kubernetes clusters run smoothly and reliably.
 
 ## Flags
@@ -39,7 +39,7 @@ hitman run \
 
 ## Examples
 
-Here you have a complete example. More up-to-date one will always be maintained in 
+Here you have a complete example. More up-to-date one will always be maintained in
 `docs/prototypes` directory [here](./docs/prototypes)
 
 
@@ -64,13 +64,13 @@ spec:
         name:
           matchRegex: ^(coredns-)
           #matchExact: "coredns-xxxxxxxxxx-yyyyy"
-        
+
         # Select the namespace where the resources are located
         # Choose one of the following options
-        namespace: 
+        namespace:
           matchRegex: ^(kube-system)
           #matchExact: kube-system
-        
+
       conditions:
 
       # Delete the resources when they are older than 10 minutes
@@ -80,14 +80,62 @@ spec:
 
           {{- $nowTimestamp := (now | unixEpoch) -}}
           {{- $podStartTime := (toDate "2006-01-02T15:04:05Z07:00" .object.status.startTime) | unixEpoch -}}
-          
+
           {{/* Calculate the age of the resource in minutes */}}
           {{- $minutedFromNow := int (round (div (sub $nowTimestamp $podStartTime) 60) 0) -}}
-            
+
           {{/* Print true ONLY if the resource is older than 5 minutes */}}
           {{- printf "%v" (ge $minutedFromNow $maxAgeMinutes) -}}
         value: true
+```
 
+As you probably noticed in the previous example, conditions are made using vitamin Golang template
+(better known as Helm template), so **all the functions available in Helm are available here too.**
+This way you start creating wonderful deletions from first minute.
+
+**Sometimes it's needed to process the whole list of targets before being evaluated for deletion.** This is useful to
+analyze the resources deeper, and group or drop some of them based on user-defined desires.
+
+Because of that, there is a special optional `preStep` section that is evaluated just one time before evaluating conditions.
+In that section an object `.targets` is injected.
+
+It's also possible to store custom content into variables that will be alive during the whole evaluation lifecycle, so stored content
+will be available inside conditions templates into `.vars` object.
+
+To store content, there is a function called `setVar`. It can be used as follows:
+
+```yaml
+version: v1alpha1
+kind: Hitman
+metadata:
+  name: killing-sample
+spec:
+  resources:
+
+    - ...
+
+      # (Optional) Define a preStep
+      preStep: |
+        {{/* The whole list of targets is available */}}
+        {{ $retrievedTargets := .targets }}
+
+
+        {{/* Let's define example data */}}
+        {{- $someDataForLater := dict "name" "example-name" "namespace" "example-namespace" -}}
+
+
+        {{/* Store your data under your desired key. You can use as many keys as needed */}}
+        {{- setVar "example" $someDataForLater -}}
+
+      conditions:
+
+      # Delete the resources when they are older than 10 minutes
+      - key: |-
+          {{/* Retrieve a previously defined variable if needed */}}
+          {{ $myStoredKey := .vars.example }}
+
+          {{/* Add some logic here to evaluate your conditions */}}
+        value: true
 ```
 
 > ATTENTION:
@@ -95,7 +143,7 @@ spec:
 
 ## How to deploy
 
-This project is designed specially for Kubernetes, but also provides binary files 
+This project is designed specially for Kubernetes, but also provides binary files
 and Docker images to make it easy to be deployed however wanted
 
 ### Binaries
@@ -119,10 +167,10 @@ helm upgrade --install --wait hitman \
 
 ### Docker
 
-Docker images can be found in GitHub's [packages](https://github.com/achetronic/hitman/pkgs/container/hitman) 
+Docker images can be found in GitHub's [packages](https://github.com/achetronic/hitman/pkgs/container/hitman)
 related to this repository
 
-> Do you need it in a different container registry? I think this is not needed, but if I'm wrong, please, let's discuss 
+> Do you need it in a different container registry? I think this is not needed, but if I'm wrong, please, let's discuss
 > it in the best place for that: an issue
 
 ## How to contribute
