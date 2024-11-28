@@ -141,7 +141,7 @@ func (p *Processor) SyncResources() (err error) {
 				continue
 			}
 
-			globals.ExecContext.Logger.Infof("resource '%s' in namespace '%s' was deleted successfully", resource.GetName(), resource.GetNamespace())
+			globals.ExecContext.Logger.Infof("resource '%s'/'%s' in namespace '%s' was deleted successfully", resource.GetKind(), resource.GetName(), resource.GetNamespace())
 		}
 	}
 
@@ -203,8 +203,8 @@ func (p *Processor) processObject(gvr schema.GroupVersionResource, object unstru
 	}
 
 	if globals.ExecContext.DryRun {
-		globals.ExecContext.Logger.Infof("dry-run enabled. Skipping deletion of object: '%s'/'%s'",
-			object.GetNamespace(), object.GetName())
+		globals.ExecContext.Logger.Infof("dry-run enabled. Skipping deletion of object: '%s'/'%s'/'%s'",
+			object.GetNamespace(), object.GetKind(), object.GetName())
 		return false, nil
 	}
 
