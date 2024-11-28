@@ -88,32 +88,29 @@ func (p *Processor) SyncResources() (err error) {
 			continue
 		}
 
+		filteredResourceList := make([]unstructured.Unstructured, 0)
 		// Preprocess the targets list to clean the items not matching the user-desired criteria
-		for rawResourceIndex, rawResourceObject := range resourceList.Items {
+		for _, rawResourceObject := range resourceList.Items {
 
 			// Matching namespace by regex and resource does NOT meet? Skip
 			if configResource.Target.Namespace.MatchRegex != "" &&
 				!compiledRegexNamespace.MatchString(rawResourceObject.GetNamespace()) {
-
-				deleteItemByIndex(&resourceList.Items, rawResourceIndex)
 				continue
 			}
 
 			// Matching name by exact string and resource does NOT meet? Skip
 			if configResource.Target.Name.MatchExact != "" &&
 				rawResourceObject.GetName() != configResource.Target.Name.MatchExact {
-
-				deleteItemByIndex(&resourceList.Items, rawResourceIndex)
 				continue
 			}
 
 			// Matching name by regex and resource does NOT meet? Skip
 			if configResource.Target.Name.MatchRegex != "" &&
 				!compiledRegex.MatchString(rawResourceObject.GetName()) {
-
-				deleteItemByIndex(&resourceList.Items, rawResourceIndex)
 				continue
 			}
+
+			filteredResourceList = append(filteredResourceList, rawResourceObject)
 		}
 
 		templateInjectedObject := &map[string]interface{}{} // TODO, review potential nil pointer dereference
@@ -121,7 +118,7 @@ func (p *Processor) SyncResources() (err error) {
 		// Perform global user-defined actions when 'preStep' is set in the config
 		// This is useful to group resources, pre-filter some of them, etc, before evaluating one by one
 		if configResource.PreStep != "" {
-			err = p.processPrestep(configResource.PreStep, templateInjectedObject, resourceList.Items)
+			err = p.processPrestep(configResource.PreStep, templateInjectedObject, filteredResourceList)
 			if err != nil {
 				globals.ExecContext.Logger.Infof("error processing prestep: %s", err)
 				continue
@@ -129,7 +126,7 @@ func (p *Processor) SyncResources() (err error) {
 		}
 
 		// Perform the actions over the resources
-		for _, resource := range resourceList.Items {
+		for _, resource := range filteredResourceList {
 
 			// Process this object. Delete in case of success
 			objectDeleted, err := p.processObject(gvr, resource, templateInjectedObject, configResource.Conditions)
@@ -139,12 +136,12 @@ func (p *Processor) SyncResources() (err error) {
 			}
 
 			if !objectDeleted {
-				globals.ExecContext.Logger.Infof("resource '%s' in namespace '%s' did NOT meet the conditions",
+				globals.ExecContext.Logger.Debugf("resource '%s' in namespace '%s' did NOT meet the conditions",
 					resource.GetName(), resource.GetNamespace())
 				continue
 			}
 
-			globals.ExecContext.Logger.Infof("resource '%s' in namespace '%s' was deleted successfully", resource.GetName(), resource.GetNamespace())
+			globals.ExecContext.Logger.Infof("resource '%s'/'%s' in namespace '%s' was deleted successfully", resource.GetKind(), resource.GetName(), resource.GetNamespace())
 		}
 	}
 
@@ -206,8 +203,8 @@ func (p *Processor) processObject(gvr schema.GroupVersionResource, object unstru
 	}
 
 	if globals.ExecContext.DryRun {
-		globals.ExecContext.Logger.Infof("dry-run enabled. Skipping deletion of object: '%s'/'%s'",
-			object.GetNamespace(), object.GetName())
+		globals.ExecContext.Logger.Infof("dry-run enabled. Skipping deletion of object: '%s'/'%s'/'%s'",
+			object.GetNamespace(), object.GetKind(), object.GetName())
 		return false, nil
 	}
 
