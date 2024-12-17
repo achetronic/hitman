@@ -74,6 +74,7 @@ func GetFunctionsMap() template.FuncMap {
 		"toJson":        toJSON,
 		"fromJson":      fromJSON,
 		"fromJsonArray": fromJSONArray,
+
 		// Extended funcs
 		"logPrintf": logPrintf,
 		//"setVar":    func(string, interface{}) string,

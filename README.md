@@ -138,8 +138,9 @@ spec:
         value: true
 ```
 
-> ATTENTION:
-> If you detect some mistake on the config, open an issue to fix it. This way we all will benefit
+> [!TIP]
+> Another useful function that can be used in templates is `logPrintf`. It accepts the same params as printf
+> but throw the result in controller's logs instead of returning it
 
 ## How to deploy
 
