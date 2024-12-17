@@ -2,6 +2,28 @@ apiVersion: v1
 entries:
   hitman:
   - apiVersion: v2
+    appVersion: 0.5.0
+    created: "2024-12-17T14:04:33.88278449Z"
+    description: A Helm chart for Hitman, a daemon for Kubernetes to kill target resources
+      under user-defined templated conditions
+    digest: 1ed94203583acb17cafb043c3f09dff0707b2f83b248854487ebb415c67d51ae
+    home: https://github.com/achetronic/hitman
+    keywords:
+    - hitman
+    - kubernetes
+    kubeVersion: '>=1.22.0-0'
+    maintainers:
+    - email: donfumero@gmail.com
+      name: Alby Hernández
+      url: https://github.com/achetronic
+    name: hitman
+    sources:
+    - https://github.com/achetronic/hitman
+    type: application
+    urls:
+    - hitman-0.5.0.tgz
+    version: 0.5.0
+  - apiVersion: v2
     appVersion: 0.4.0
     created: "2024-12-17T13:24:54.652590698Z"
     description: A Helm chart for Hitman, a daemon for Kubernetes to kill target resources
@@ -155,4 +177,4 @@ entries:
     urls:
     - hitman-0.1.0.tgz
     version: 0.1.0
-generated: "2024-12-17T13:24:54.652619592Z"
+generated: "2024-12-17T14:04:33.882827631Z"
