@@ -3,6 +3,7 @@ package template
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"strings"
 	"text/template"
 
@@ -73,6 +74,9 @@ func GetFunctionsMap() template.FuncMap {
 		"toJson":        toJSON,
 		"fromJson":      fromJSON,
 		"fromJsonArray": fromJSONArray,
+		// Extended funcs
+		"logPrintf": logPrintf,
+		//"setVar":    func(string, interface{}) string,
 	}
 
 	for k, v := range extra {
@@ -97,6 +101,14 @@ func toYAML(v interface{}) string {
 
 // fromYAML converts a YAML document into a map[string]interface{}.
 //
+// logPrintf is the equivalent of printf function.
+// It take a format-string and several items as arguments and throw the result by logs.
+// It returns an empty string as returning something is required in Go template's func mapping
+func logPrintf(format string, v ...interface{}) string {
+	log.Printf(format, v...)
+	return ""
+}
+
 // This is not a general-purpose YAML parser, and will not parse all valid
 // YAML documents. Additionally, because its intended use is within templates
 // it tolerates errors. It will insert the returned error message string into
