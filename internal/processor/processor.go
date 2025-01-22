@@ -64,6 +64,7 @@ func (p *Processor) SyncResources() (err error) {
 
 		resourceRaw := p.Client.Resource(gvr)
 
+		// TODO: This is not fully working. Using fieldSelector is potentially better
 		if configResource.Target.Namespace.MatchExact != "" {
 			resourceRaw.Namespace(configResource.Target.Namespace.MatchExact)
 		}
