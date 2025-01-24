@@ -96,9 +96,9 @@ build: fmt vet check-go-target check-version ## Build CLI binary.
 	go build -o bin/hitman-$(GOOS)-$(GOARCH) cmd/main.go
 	@sed -i -E 's/(version: )v[0-9.]+/\1{VERSION}/' ./internal/cmd/version/version.go
 
-.PHONY: run
+.PHONY: run fmt vet
 run: fmt vet ## Run a controller from your host.
-	go run ./cmd/main.go
+	go run ./cmd/main.go run $(ARGS)
 
 # If you wish to build the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64). However, you must enable docker buildKit for it.
