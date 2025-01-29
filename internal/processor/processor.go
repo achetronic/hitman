@@ -64,12 +64,13 @@ func (p *Processor) SyncResources() (err error) {
 
 		resourceRaw := p.Client.Resource(gvr)
 
-		// TODO: This is not fully working. Using fieldSelector is potentially better
+		//
+		resourceList, err := resourceRaw.List(globals.ExecContext.Context, v1.ListOptions{})
 		if configResource.Target.Namespace.MatchExact != "" {
-			resourceRaw.Namespace(configResource.Target.Namespace.MatchExact)
+			resourceList, err = resourceRaw.Namespace(configResource.Target.Namespace.MatchExact).
+				List(globals.ExecContext.Context, v1.ListOptions{})
 		}
 
-		resourceList, err := resourceRaw.List(globals.ExecContext.Context, v1.ListOptions{})
 		if err != nil {
 			globals.ExecContext.Logger.Infof("error listing resources of type '%s' in namespace '%s': %s",
 				gvr.String(), configResource.Target.Namespace, err)
