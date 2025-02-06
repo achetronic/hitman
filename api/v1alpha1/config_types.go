@@ -16,6 +16,11 @@ limitations under the License.
 
 package v1alpha1
 
+import (
+	"sync"
+	"time"
+)
+
 // TargetNameT defines TODO
 type TargetSelectorT struct {
 	MatchExact string `yaml:"matchExact,omitempty"`
@@ -53,6 +58,10 @@ type MetadataT struct {
 type SynchronizationT struct {
 	Time            string `yaml:"time"`
 	ProcessingDelay string `yaml:"processingDelay,omitempty"`
+
+	// Carried stuff
+	CarriedTime            time.Duration
+	CarriedProcessingDelay time.Duration
 }
 
 // SpecificationSpec TODO
@@ -63,6 +72,9 @@ type SpecificationT struct {
 
 // ConfigSpec TODO
 type ConfigT struct {
+	Mutex sync.RWMutex
+
+	//
 	ApiVersion string         `yaml:"apiVersion"`
 	Kind       string         `yaml:"kind"`
 	Metadata   MetadataT      `yaml:"metadata"`

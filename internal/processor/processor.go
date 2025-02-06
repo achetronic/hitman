@@ -18,11 +18,8 @@ import (
 )
 
 type Processor struct {
-	Client      *dynamic.DynamicClient
-	targetDelay time.Duration
+	Client *dynamic.DynamicClient
 }
-
-const defaultTargetProcessingDelay = 100 * time.Millisecond
 
 func NewProcessor() (processor *Processor, err error) {
 
@@ -31,25 +28,19 @@ func NewProcessor() (processor *Processor, err error) {
 		return processor, err
 	}
 
-	// Configurar el delay
-	delay := defaultTargetProcessingDelay
-	if globals.ExecContext.Config.Spec.Synchronization.ProcessingDelay != "" {
-		if configuredDelay, err := time.ParseDuration(globals.ExecContext.Config.Spec.Synchronization.ProcessingDelay); err == nil {
-			delay = configuredDelay
-		}
-	}
-
 	return &Processor{
-		Client:      client,
-		targetDelay: delay,
+		Client: client,
 	}, err
 }
 
 // TODO
 func (p *Processor) SyncResources() (err error) {
-	for i, configResource := range globals.ExecContext.Config.Spec.Resources {
-		if i > 0 {
-			time.Sleep(p.targetDelay) // Usa el delay pre-configurado
+	for configResourceIndex, configResource := range globals.ExecContext.Config.Spec.Resources {
+
+		// You may wonder why this is in the upper section of the loop...
+		// Fast solution, less canonical. Let's your tomorrow-me worry about that
+		if configResourceIndex != 0 {
+			time.Sleep(globals.ExecContext.Config.Spec.Synchronization.CarriedProcessingDelay)
 		}
 
 		// Matching a name is required
