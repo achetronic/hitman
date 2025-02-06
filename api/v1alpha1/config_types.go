@@ -51,7 +51,8 @@ type MetadataT struct {
 
 // SynchronizationT defines TODO
 type SynchronizationT struct {
-	Time string `yaml:"time"`
+	Time            string `yaml:"time"`
+	ProcessingDelay string `yaml:"processingDelay,omitempty"`
 }
 
 // SpecificationSpec TODO
