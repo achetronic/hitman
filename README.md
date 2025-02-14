@@ -51,7 +51,7 @@ metadata:
 spec:
   synchronization:
     time: 1m
-
+    processingDelay: 1s
   resources:
 
     - target:
