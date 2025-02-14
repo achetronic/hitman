@@ -26,6 +26,7 @@ const (
 	DisableTraceFlagErrorMessage    = "impossible to get flag --disable-trace: %s"
 	DryRunFlagErrorMessage          = "impossible to get flag --dry-run: %s"
 	UnableParseDurationErrorMessage = "unable to parse duration: %s"
+
 )
 
 func NewCommand() *cobra.Command {
@@ -86,17 +87,7 @@ func RunCommand(cmd *cobra.Command, args []string) {
 	globals.ExecContext.Logger.Infof("starting Hitman. Getting ready to kill some targets")
 
 	// Parse and store the config
-	configContent, err := config.ReadFile(configPath)
-	if err != nil {
-		globals.ExecContext.Logger.Fatalf(fmt.Sprintf(ConfigNotParsedErrorMessage, err))
-	}
-	globals.ExecContext.Config = configContent
-
-	//
-	duration, err := time.ParseDuration(configContent.Spec.Synchronization.Time)
-	if err != nil {
-		globals.ExecContext.Logger.Fatalf(UnableParseDurationErrorMessage, err)
-	}
+	go configProcessorWorker(configPath)
 
 	//
 	processorObj, err := processor.NewProcessor()
@@ -106,12 +97,59 @@ func RunCommand(cmd *cobra.Command, args []string) {
 
 	for {
 		globals.ExecContext.Logger.Info("syncing resources")
+
+		globals.ExecContext.Config.Mutex.RLock()
 		err = processorObj.SyncResources()
 		if err != nil {
 			globals.ExecContext.Logger.Infof("error syncing resources: %s", err)
 		}
 
-		globals.ExecContext.Logger.Infof("syncing again in %s", duration.String())
-		time.Sleep(duration)
+		//
+		globals.ExecContext.Logger.Infof("syncing again in %s",
+			globals.ExecContext.Config.Spec.Synchronization.CarriedTime.String())
+		globals.ExecContext.Config.Mutex.RUnlock()
+		time.Sleep(globals.ExecContext.Config.Spec.Synchronization.CarriedTime)
+	}
+}
+
+// configProcessorWorker TODO
+func configProcessorWorker(configPath string) {
+
+	for {
+
+		// Parse and store the config
+		configContent, err := config.ReadFile(configPath)
+		if err != nil {
+			globals.ExecContext.Logger.Fatalf(fmt.Sprintf(ConfigNotParsedErrorMessage, err))
+		}
+
+		//
+		duration, err := time.ParseDuration(configContent.Spec.Synchronization.Time)
+		if err != nil {
+			globals.ExecContext.Logger.Fatalf(UnableParseDurationErrorMessage, err)
+		}
+
+		//
+		durationDelay, err := time.ParseDuration(configContent.Spec.Synchronization.ProcessingDelay)
+		if err != nil {
+			globals.ExecContext.Logger.Fatalf(UnableParseDurationErrorMessage, err)
+		}
+
+		//
+		configContent.Spec.Synchronization.CarriedTime = duration
+		configContent.Spec.Synchronization.CarriedProcessingDelay = durationDelay
+
+		//
+		globals.ExecContext.Config.Mutex.Lock()
+
+		globals.ExecContext.Config.ApiVersion = configContent.ApiVersion
+		globals.ExecContext.Config.Kind = configContent.Kind
+		globals.ExecContext.Config.Metadata = configContent.Metadata
+		globals.ExecContext.Config.Spec = configContent.Spec
+
+		globals.ExecContext.Config.Mutex.Unlock()
+
+		//
+		time.Sleep(2 * time.Second)
 	}
 }

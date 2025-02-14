@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"regexp"
 	"slices"
+	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -34,8 +35,13 @@ func NewProcessor() (processor *Processor, err error) {
 
 // TODO
 func (p *Processor) SyncResources() (err error) {
+	for configResourceIndex, configResource := range globals.ExecContext.Config.Spec.Resources {
 
-	for _, configResource := range globals.ExecContext.Config.Spec.Resources {
+		// You may wonder why this is in the upper section of the loop...
+		// Fast solution, less canonical. Let's your tomorrow-me worry about that
+		if configResourceIndex != 0 {
+			time.Sleep(globals.ExecContext.Config.Spec.Synchronization.CarriedProcessingDelay)
+		}
 
 		// Matching a name is required
 		if reflect.ValueOf(configResource.Target.Name).IsZero() {
