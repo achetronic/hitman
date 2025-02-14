@@ -27,8 +27,6 @@ const (
 	DryRunFlagErrorMessage          = "impossible to get flag --dry-run: %s"
 	UnableParseDurationErrorMessage = "unable to parse duration: %s"
 
-	//
-	//defaultTargetProcessingDelay = 100 * time.Millisecond
 )
 
 func NewCommand() *cobra.Command {
