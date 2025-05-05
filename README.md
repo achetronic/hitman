@@ -50,8 +50,16 @@ metadata:
   name: killing-sample
 spec:
   synchronization:
+    # Duration between main resources' cleaning loops.
+    # Hitman will review all the resources leaving this duration between the loops
+    # (Default: 5m)
     time: 1m
-    processingDelay: 1s
+
+    # Duration between each resource review.
+    # This prevents resources exhaustion (CPU/memory) caused by the speed of the loop by reducing it.
+    # This allows Golang's garbage collector manage resources with less pressure.
+    # (Default: 200ms)
+    processingDelay: 100ms
   resources:
 
     - target:

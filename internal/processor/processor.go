@@ -2,19 +2,22 @@ package processor
 
 import (
 	"fmt"
-	"hitman/api/v1alpha1"
-	"hitman/internal/globals"
-	"hitman/internal/kubernetes"
-	"hitman/internal/template"
 	"reflect"
 	"regexp"
 	"slices"
 	"time"
 
+	//
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+
+	//
+	"hitman/api/v1alpha1"
+	"hitman/internal/globals"
+	"hitman/internal/kubernetes"
+	"hitman/internal/template"
 )
 
 type Processor struct {
@@ -38,7 +41,7 @@ func (p *Processor) SyncResources() (err error) {
 	for configResourceIndex, configResource := range globals.ExecContext.Config.Spec.Resources {
 
 		// You may wonder why this is in the upper section of the loop...
-		// Fast solution, less canonical. Let's your tomorrow-me worry about that
+		// Fast solution, less canonical. Lets your tomorrow-me worry about that
 		if configResourceIndex != 0 {
 			time.Sleep(globals.ExecContext.Config.Spec.Synchronization.CarriedProcessingDelay)
 		}

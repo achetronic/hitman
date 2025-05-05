@@ -2,13 +2,18 @@ package run
 
 import (
 	"fmt"
+	"hitman/api/v1alpha1"
+	"log"
+	"reflect"
+	"time"
+
+	//
+	"github.com/spf13/cobra"
+
+	//
 	"hitman/internal/config"
 	"hitman/internal/globals"
 	"hitman/internal/processor"
-	"log"
-	"time"
-
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -26,7 +31,6 @@ const (
 	DisableTraceFlagErrorMessage    = "impossible to get flag --disable-trace: %s"
 	DryRunFlagErrorMessage          = "impossible to get flag --dry-run: %s"
 	UnableParseDurationErrorMessage = "unable to parse duration: %s"
-
 )
 
 func NewCommand() *cobra.Command {
@@ -124,12 +128,18 @@ func configProcessorWorker(configPath string) {
 		}
 
 		//
+		if reflect.ValueOf(configContent.Spec.Synchronization.Time).IsZero() {
+			configContent.Spec.Synchronization.Time = v1alpha1.DefaultSyncTime
+		}
 		duration, err := time.ParseDuration(configContent.Spec.Synchronization.Time)
 		if err != nil {
 			globals.ExecContext.Logger.Fatalf(UnableParseDurationErrorMessage, err)
 		}
 
 		//
+		if reflect.ValueOf(configContent.Spec.Synchronization.ProcessingDelay).IsZero() {
+			configContent.Spec.Synchronization.ProcessingDelay = v1alpha1.DefaultSyncProcessingDelay
+		}
 		durationDelay, err := time.ParseDuration(configContent.Spec.Synchronization.ProcessingDelay)
 		if err != nil {
 			globals.ExecContext.Logger.Fatalf(UnableParseDurationErrorMessage, err)

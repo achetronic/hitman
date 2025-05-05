@@ -3,9 +3,9 @@ package config
 import (
 	"os"
 
-	"hitman/api/v1alpha1"
-
 	"gopkg.in/yaml.v3"
+
+	"hitman/api/v1alpha1"
 )
 
 // Marshal TODO

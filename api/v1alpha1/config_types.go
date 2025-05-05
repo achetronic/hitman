@@ -21,6 +21,11 @@ import (
 	"time"
 )
 
+var (
+	DefaultSyncTime            = "5m"
+	DefaultSyncProcessingDelay = "200ms"
+)
+
 // TargetNameT defines TODO
 type TargetSelectorT struct {
 	MatchExact string `yaml:"matchExact,omitempty"`
