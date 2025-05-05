@@ -5,6 +5,7 @@ import (
 	"hitman/api/v1alpha1"
 	"log"
 	"reflect"
+	"sync"
 	"time"
 
 	//
@@ -90,8 +91,12 @@ func RunCommand(cmd *cobra.Command, args []string) {
 
 	globals.ExecContext.Logger.Infof("starting Hitman. Getting ready to kill some targets")
 
-	// Parse and store the config
-	go configProcessorWorker(configPath)
+	// Parse and store the config in the background
+	// Main process must wait until config is being processed, at least, once
+	waitForMe := &sync.WaitGroup{}
+	waitForMe.Add(1)
+	go configProcessorWorker(configPath, waitForMe)
+	waitForMe.Wait()
 
 	//
 	processorObj, err := processor.NewProcessor()
@@ -117,7 +122,10 @@ func RunCommand(cmd *cobra.Command, args []string) {
 }
 
 // configProcessorWorker TODO
-func configProcessorWorker(configPath string) {
+func configProcessorWorker(configPath string, wg *sync.WaitGroup) {
+
+	// Inform main process I'm started, BITCH!
+	wg.Done()
 
 	for {
 
