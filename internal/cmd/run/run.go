@@ -123,9 +123,9 @@ func RunCommand(cmd *cobra.Command, args []string) {
 
 // configProcessorWorker TODO
 func configProcessorWorker(configPath string, wg *sync.WaitGroup) {
+	firstRun := true
 
 	for {
-
 		// Parse and store the config
 		configContent, err := config.ReadFile(configPath)
 		if err != nil {
@@ -164,8 +164,11 @@ func configProcessorWorker(configPath string, wg *sync.WaitGroup) {
 
 		globals.ExecContext.Config.Mutex.Unlock()
 
-		// Inform main process I'm started, BITCH!
-		wg.Done()
+		//Inform main process I'm started, BITCH., but just once!
+		if firstRun {
+			wg.Done()
+			firstRun = false
+		}
 
 		//
 		time.Sleep(2 * time.Second)
