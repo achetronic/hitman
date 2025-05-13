@@ -5,7 +5,6 @@ import (
 	"hitman/api/v1alpha1"
 	"log"
 	"reflect"
-	"sync"
 	"time"
 
 	//
@@ -93,10 +92,9 @@ func RunCommand(cmd *cobra.Command, args []string) {
 
 	// Parse and store the config in the background
 	// Main process must wait until config is being processed, at least, once
-	waitForMe := &sync.WaitGroup{}
-	waitForMe.Add(1)
-	go configProcessorWorker(configPath, waitForMe)
-	waitForMe.Wait()
+	configReady := make(chan struct{})
+	go configProcessorWorker(configPath, configReady)
+	<-configReady // Wait until config is ready
 
 	//
 	processorObj, err := processor.NewProcessor()
@@ -121,56 +119,58 @@ func RunCommand(cmd *cobra.Command, args []string) {
 	}
 }
 
-// configProcessorWorker TODO
-func configProcessorWorker(configPath string, wg *sync.WaitGroup) {
-	firstRun := true
+// configProcessorWorker TODO - Reads and applies configuration initially,
+// then reloads periodically
+func configProcessorWorker(configPath string, configReady chan<- struct{}) {
+	// Initial load
+	applyConfig(configPath)
 
-	for {
-		// Parse and store the config
-		configContent, err := config.ReadFile(configPath)
-		if err != nil {
-			globals.ExecContext.Logger.Fatalf(fmt.Sprintf(ConfigNotParsedErrorMessage, err))
-		}
+	// Signal main that initial config is ready
+	close(configReady)
 
-		//
-		if reflect.ValueOf(configContent.Spec.Synchronization.Time).IsZero() {
-			configContent.Spec.Synchronization.Time = v1alpha1.DefaultSyncTime
-		}
-		duration, err := time.ParseDuration(configContent.Spec.Synchronization.Time)
-		if err != nil {
-			globals.ExecContext.Logger.Fatalf(UnableParseDurationErrorMessage, err)
-		}
-
-		//
-		if reflect.ValueOf(configContent.Spec.Synchronization.ProcessingDelay).IsZero() {
-			configContent.Spec.Synchronization.ProcessingDelay = v1alpha1.DefaultSyncProcessingDelay
-		}
-		durationDelay, err := time.ParseDuration(configContent.Spec.Synchronization.ProcessingDelay)
-		if err != nil {
-			globals.ExecContext.Logger.Fatalf(UnableParseDurationErrorMessage, err)
-		}
-
-		//
-		configContent.Spec.Synchronization.CarriedTime = duration
-		configContent.Spec.Synchronization.CarriedProcessingDelay = durationDelay
-
-		//
-		globals.ExecContext.Config.Mutex.Lock()
-
-		globals.ExecContext.Config.ApiVersion = configContent.ApiVersion
-		globals.ExecContext.Config.Kind = configContent.Kind
-		globals.ExecContext.Config.Metadata = configContent.Metadata
-		globals.ExecContext.Config.Spec = configContent.Spec
-
-		globals.ExecContext.Config.Mutex.Unlock()
-
-		//Inform main process I'm started, BITCH., but just once!
-		if firstRun {
-			wg.Done()
-			firstRun = false
-		}
-
-		//
-		time.Sleep(2 * time.Second)
+	// Periodic reload every 2 seconds
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+	for range ticker.C {
+		applyConfig(configPath)
 	}
+}
+
+// applyConfig TODO - Reads the config file, parses durations,
+// and updates globals.ExecContext.Config
+func applyConfig(configPath string) {
+	configContent, err := config.ReadFile(configPath)
+	if err != nil {
+		globals.ExecContext.Logger.Fatalf(fmt.Sprintf(ConfigNotParsedErrorMessage, err))
+	}
+
+	// Set default synchronization times if zero
+	if reflect.ValueOf(configContent.Spec.Synchronization.Time).IsZero() {
+		configContent.Spec.Synchronization.Time = v1alpha1.DefaultSyncTime
+	}
+	duration, err := time.ParseDuration(configContent.Spec.Synchronization.Time)
+	if err != nil {
+		globals.ExecContext.Logger.Fatalf(UnableParseDurationErrorMessage, err)
+	}
+
+	if reflect.ValueOf(configContent.Spec.Synchronization.ProcessingDelay).IsZero() {
+		configContent.Spec.Synchronization.ProcessingDelay = v1alpha1.DefaultSyncProcessingDelay
+	}
+	durationDelay, err := time.ParseDuration(configContent.Spec.Synchronization.ProcessingDelay)
+	if err != nil {
+		globals.ExecContext.Logger.Fatalf(UnableParseDurationErrorMessage, err)
+	}
+
+	configContent.Spec.Synchronization.CarriedTime = duration
+	configContent.Spec.Synchronization.CarriedProcessingDelay = durationDelay
+
+	// Apply updated config under lock
+	globals.ExecContext.Config.Mutex.Lock()
+
+	globals.ExecContext.Config.ApiVersion = configContent.ApiVersion
+	globals.ExecContext.Config.Kind = configContent.Kind
+	globals.ExecContext.Config.Metadata = configContent.Metadata
+	globals.ExecContext.Config.Spec = configContent.Spec
+
+	globals.ExecContext.Config.Mutex.Unlock()
 }
